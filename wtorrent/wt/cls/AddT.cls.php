@@ -37,6 +37,7 @@ class AddT extends rtorrent
 		{
 			$this->addMagnet(
 				$this->_request['torrenturl'],
+				$this->_request['download_dir'],
 				$this->_request['start_now'],
 				$this->_request['private']
 			);
@@ -52,8 +53,19 @@ class AddT extends rtorrent
 		}	 
 	}
 	// Add magnet link
-	private function addMagnet( $url, $start_now, $private )
+	private function addMagnet( $url, $dir, $start_now, $private )
 	{
+		// Get Dir if user can only download to a certain directory
+		if($this->getForceDir() == 1)
+            {
+                $dir = $this->getDir();
+
+            }
+
+        // set target dir
+		$message = new xmlrpcmsg("set_directory", array(new xmlrpcval($dir , 'string')));
+		$result1 = $this->client->send($message);
+
 		if($start_now == 'on')
 		{
 			$method = 'load_start';
@@ -73,6 +85,8 @@ class AddT extends rtorrent
 		{
 			$this->addMessage($this->_str['err_add_torrent']);
 		}
+        // set target dir from config (default target dir)
+		$message = new xmlrpcmsg("set_directory", array(new xmlrpcval(DIR_DOWNLOAD, 'string')));
 		$this->client->send($message);
 	}
 
